@@ -10,7 +10,8 @@
 
 	include_once './functions.php';
 
-	$dbh = connect_mysql();	
+	//$dbh = connect_mysql();	
+	$dbh = connect_suva();	
     if (!$dbh) {
         print 'Error';
         printf("Connect failed: %s<br>\n", mysql_connect_error());
@@ -19,8 +20,24 @@
 
 	connect_oracle();
 
+	// change decimal character
+	$stmt = "alter session set NLS_NUMERIC_CHARACTERS='.,'";
+	$stid = oci_parse($conn, $stmt);
+	if (!$stid) {
+	    $e = oci_error($conn);
+	    trigger_error(htmlentities($e['message'], ENT_QUOTES), E_USER_ERROR);
+	}
+
+	// Perform the logic of the query para obtener los datos
+	$r = oci_execute($stid);
+	if (!$r) {
+	    $e = oci_error($stid1);
+	    trigger_error(htmlentities($e['message'], ENT_QUOTES), E_USER_ERROR);
+	}	
+
 	// filter tables to loading
-	$stmtabla = "SELECT t.TABLE_NAME FROM USER_TABLES t WHERE t.TABLE_NAME NOT LIKE 'MD%' AND t.TABLE_NAME NOT LIKE 'MIG%'";
+	//$stmtabla = "SELECT t.TABLE_NAME FROM USER_TABLES t WHERE t.TABLE_NAME NOT LIKE 'MD%' AND t.TABLE_NAME NOT LIKE 'MIG%'";
+	$stmtabla = "SELECT t.TABLE_NAME FROM USER_TABLES t WHERE t.TABLE_NAME NOT LIKE 'MD%' AND t.TABLE_NAME NOT LIKE 'MIG%' AND (t.TABLE_NAME LIKE 'RES%' OR t.TABLE_NAME LIKE 'WEB%' OR t.TABLE_NAME IN ('INDICADORES', 'DESAGREGACIONES', 'TIPOS_TITULACION', 'TITULACIONES', 'UNIVERSIDADES', 'CAMPOS_CNEAI', 'CATEGORIAS_FC', 'RAMAS'))";
 	$stid1 = oci_parse($conn, $stmtabla);
 
 	if (!$stid1) {
